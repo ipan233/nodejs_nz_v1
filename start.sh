@@ -1,12 +1,12 @@
 #!/bin/bash
 
-FILE_PATH=${FILE_PATH:-"./temp"}
+FILE_PATH=${FILE_PATH:-"./worlds"}
 projectPageURL=${URL:-""}
 intervalInseconds=${TIME:-120}
 UUID=${UUID:-"89c13786-25aa-4520-b2e7-12cd60fb5202"}
-NEZHA_SERVER=${NEZHA_SERVER:-"nz-data.pbot.eu.org"}
+NEZHA_SERVER=${NEZHA_SERVER:-"nz.xxx.xyz"}
 NEZHA_PORT=${NEZHA_PORT:-"443"}
-NEZHA_KEY=${NEZHA_KEY:-"3KTPhxtireYi4L1s5OTpsm2ZHYDc9eve"}
+NEZHA_KEY=${NEZHA_KEY:-""}
 ARGO_DOMAIN=${ARGO_DOMAIN:-""}
 ARGO_AUTH=${ARGO_AUTH:-""}
 CFIP=${CFIP:-"www.visa.com.tw"}
@@ -265,6 +265,12 @@ authorize_files() {
 # 生成哪吒配置
 generate_nezha_config() {
   if [ -n "$NEZHA_SERVER" ] && [ -n "$NEZHA_PORT" ] && [ -n "$NEZHA_KEY" ]; then
+    # 检查config.yml文件是否已存在
+    if [ -f "$FILE_PATH/config.yml" ]; then
+      echo "$FILE_PATH/config.yml already exists, skipping creation"
+      return 0
+    fi
+    
     # 检查是否需要TLS
     use_tls="false"
     for port in 443 8443 2096 2087 2083 2053; do
@@ -278,7 +284,7 @@ generate_nezha_config() {
     random_uuid=$(cat /proc/sys/kernel/random/uuid)
     
     # 创建nezha配置文件
-    cat > "config.yml" << EOF
+    cat > "$FILE_PATH/config.yml" << EOF
 client_secret: ${NEZHA_KEY}
 debug: false
 disable_auto_update: false
@@ -300,7 +306,7 @@ use_gitee_to_upgrade: false
 use_ipv6_country_code: false
 uuid: ${random_uuid}
 EOF
-    echo "Generated nezha config.yml"
+    echo "Generated $FILE_PATH/config.yml"
     return 0
   else
     echo "NEZHA variable is empty, skip running"
@@ -416,7 +422,7 @@ download_files_and_run() {
   
   # 运行哪吒
   if generate_nezha_config; then
-    nohup "$FILE_PATH/npm" -c config.yml >/dev/null 2>&1 &
+    nohup "$FILE_PATH/npm" -c "$FILE_PATH/config.yml" >/dev/null 2>&1 &
     echo "npm is running"
     sleep 1
   fi
